@@ -1,10 +1,9 @@
 import os
 import uuid
-import json
 import logging
 import io
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Request
+from fastapi import APIRouter, File, UploadFile, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from reportlab.pdfgen import canvas
@@ -86,7 +85,6 @@ async def upload_document(request: Request, file: UploadFile = File(...)):
     try:
         session_id = require_session_id(request)
 
-        # 1. Validate file extension and MIME type
         filename = file.filename
         if not filename:
             raise HTTPException(status_code=400, detail="Uploaded file must have a valid filename.")
@@ -97,15 +95,13 @@ async def upload_document(request: Request, file: UploadFile = File(...)):
                 detail="Unsupported file format or MIME type. Only PDF, PNG, JPG, and JPEG are allowed."
             )
 
-        # 2. Generate unique document ID and local file path
         doc_id = str(uuid.uuid4())
         local_path = os.path.join(UPLOAD_DIR, f"{doc_id}.{ext}")
 
-        # 3. Stream write to disk to prevent OOM / high memory consumption
         size = 0
         try:
             with open(local_path, "wb") as buffer:
-                while chunk := await file.read(1024 * 1024):  # 1MB chunks
+                while chunk := await file.read(1024 * 1024):
                     size += len(chunk)
                     if size > MAX_FILE_SIZE:
                         raise HTTPException(
@@ -122,9 +118,7 @@ async def upload_document(request: Request, file: UploadFile = File(...)):
                 os.remove(local_path)
             raise HTTPException(status_code=500, detail=f"File save failed: {str(e)}")
 
-        # 4. Save metadata record to SQLite
         save_document_record(session_id, doc_id, filename, local_path)
-
         return {"documentId": doc_id, "message": "Uploaded successfully"}
 
     except HTTPException as http_err:
@@ -168,22 +162,11 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
             contents = file.file.read()
             filename = file.filename
 
-        # 1. Extract Text
         text = extract_document(contents, filename, force_ocr=force_ocr, language=language)
-
-        # 2. RAG Retrieval
         relevant_laws = retrieve_relevant_laws(text, k=3)
-
-        # 3. Gemini Analysis
         analysis_result = analyze_document_with_gemini(text, relevant_laws, language)
-
-        # 4. Classification
         classification = classify_document(text)
-
-        # 5. Generate Knowledge Graph
         knowledge_graph = graph_builder.generate_graph(text)
-
-        # 6. Save cache
         save_cached_analysis(document_id, language, text, analysis_result)
 
         return {
@@ -204,9 +187,7 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Requested document file not found on storage.")
     except Exception as e:
-        import traceback
         from google.api_core.exceptions import ResourceExhausted, InvalidArgument, GoogleAPIError
-
         logger.error(f"Analysis failed: {e}")
 
         if isinstance(e, ResourceExhausted):
@@ -233,14 +214,12 @@ def chat_general(request: Request, chat_request: ChatRequest):
 
         analysis = {}
         history = [{"role": msg.role, "message": msg.message} for msg in chat_request.chat_history]
-
         response_text = generate_chat_response(
             analysis,
             history,
             chat_request.user_message,
             chat_request.language
         )
-
         return ChatResponse(response=response_text)
 
     except RateLimitExceeded:
@@ -252,10 +231,10 @@ def chat_general(request: Request, chat_request: ChatRequest):
 
 @api_router.post("/chat/{document_id}")
 @limiter.limit(RATE_LIMIT_CHAT)
-def chat_with_document(http_request: Request, document_id: str, chat_request: ChatRequest):
+def chat_with_document(request: Request, document_id: str, chat_request: ChatRequest):
     """Send chat message with document context loaded server-side."""
     try:
-        session_id = require_session_id(http_request)
+        session_id = require_session_id(request)
         require_document_owner(document_id, session_id)
 
         cached = get_cached_analysis(document_id, chat_request.language)
