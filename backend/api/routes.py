@@ -117,7 +117,7 @@ async def upload_document(request: Request, file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/analyze/{document_id}")
-def analyze_document(request: Request, document_id: str, language: str = "en", force_ocr: bool = False, file: UploadFile = File(None)):
+def analyze_document(request: Request, document_id: str, language: str = "en", force_ocr: bool = False):
     """Trigger full analysis pipeline."""
     try:
         session_id = require_session_id(request)
@@ -137,25 +137,26 @@ def analyze_document(request: Request, document_id: str, language: str = "en", f
                     "cached": True
                 }
 
-        if not file:
-            record = get_document_record(document_id)
-            if not record or not record.get("local_path"):
-                raise HTTPException(
-                    status_code=404,
-                    detail="Document not found or file missing"
-                )
-            try:
-                with open(record["local_path"], "rb") as f:
-                    contents = f.read()
-            except IOError:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Failed to read document from storage"
-                )
-            filename = record["filename"]
-        else:
-            contents = file.file.read()
-            filename = file.filename
+        record = get_document_record(document_id)
+        if not record or not record.get("local_path"):
+            raise HTTPException(
+                status_code=404,
+                detail="Document not found or file missing"
+            )
+        try:
+            # Ensure file size is within limits even when read from disk
+            file_size = os.path.getsize(record["local_path"])
+            if file_size > MAX_FILE_SIZE:
+                raise HTTPException(status_code=413, detail="File size exceeds maximum allowed limit.")
+                
+            with open(record["local_path"], "rb") as f:
+                contents = f.read()
+        except IOError:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to read document from storage"
+            )
+        filename = record["filename"]
 
         # 1. Extract Text
         text = extract_document(contents, filename, force_ocr=force_ocr, language=language)

@@ -45,15 +45,11 @@ const [selectedType, setSelectedType] = useState('all');
     // Initial fetch for analysis
     const fetchAnalysis = async () => {
       try {
-        const formData = new FormData();
-        if (file) formData.append('file', file);
-        
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const sessionId = await ensureSessionId(apiUrl);
         const response = await fetch(`${apiUrl}/api/analyze/${documentId}?language=${language}`, {
           method: 'POST',
-          headers: { 'X-Session-Id': sessionId },
-          body: formData
+          headers: { 'X-Session-Id': sessionId }
         });
         
         if (!response.ok) {
