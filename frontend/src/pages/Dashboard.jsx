@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DashboardSkeleton from "../components/DashboardSkeleton";
 import ReactFlow, { MiniMap, Controls, Background } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
@@ -209,15 +210,9 @@ export default function Dashboard() {
     animated: true
   })) || [];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center transition-colors duration-300 bg-slate-50 dark:bg-slate-950">
-        <div className="w-16 h-16 border-4 rounded-full animate-spin mb-6 border-nyaya-200 border-t-nyaya-500 dark:border-slate-800 dark:border-t-nyaya-500"></div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Analyzing Document via Advanced AI...</h2>
-        <p className="mt-2 text-slate-500 dark:text-slate-400">Extracting clauses and cross-referencing Indian Law</p>
-      </div>
-    );
-  }
+ if (loading) {
+  return <DashboardSkeleton />;
+}
 
   if (error) {
     return (

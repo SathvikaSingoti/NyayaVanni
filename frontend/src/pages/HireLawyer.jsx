@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import LawyerSkeleton from "../components/LawyerSkeleton";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -24,6 +25,16 @@ import Footer from "../components/Footer";
 export default function HireLawyer() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 20git 00);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Search and Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -412,7 +423,13 @@ export default function HireLawyer() {
         </div>
 
         {/* Grid */}
-        {filteredLawyers.length === 0 ? (
+       {loading ? (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+    {Array.from({ length: 6 }).map((_, index) => (
+      <LawyerSkeleton key={index} />
+    ))}
+  </div>
+) : filteredLawyers.length === 0 ? (
           <div className="p-10 text-center border rounded-4xl border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-md">
             <Briefcase className="w-12 h-12 mx-auto mb-4 text-slate-400 dark:text-slate-500" />
             <h3 className="text-xl font-bold text-slate-850 dark:text-white">No lawyers found</h3>
