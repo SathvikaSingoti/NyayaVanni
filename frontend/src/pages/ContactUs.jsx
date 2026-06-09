@@ -139,6 +139,8 @@ export default function ContactUs() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
+                    className={`px-4 py-3 rounded-xl border ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all`}
+                    placeholder={language === 'en' ? "John Doe" : "जॉन डो"}
                     className={`px-4 py-3 rounded-xl border ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all`}
                     placeholder={language === 'en' ? "John Doe" : "à¤œà¥‰à¤¨ à¤¡à¥‹"}
                   />
@@ -155,7 +157,7 @@ export default function ContactUs() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`px-4 py-3 rounded-xl border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all`}
+                    className={`px-4 py-3 rounded-xl border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all`}
                     placeholder="john@example.com"
                   />
                   {errors.email && <span className="text-red-500 text-xs">{errors.email}</span>}
@@ -172,6 +174,8 @@ export default function ContactUs() {
                   name="subject"
                   value={formData.subject}
                   onChange={handleChange}
+                  className={`px-4 py-3 rounded-xl border ${errors.subject ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all`}
+                  placeholder={language === 'en' ? "How can we help?" : "हम कैसे मदद कर सकते हैं?"}
                   className={`px-4 py-3 rounded-xl border ${errors.subject ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all`}
                   placeholder={language === 'en' ? "How can we help?" : "à¤¹à¤® à¤•à¥ˆà¤¸à¥‡ à¤®à¤¦à¤¦ à¤•à¤° à¤¸à¤•à¤¤à¥‡ à¤¹à¥ˆà¤‚?"}
                 />
@@ -188,6 +192,8 @@ export default function ContactUs() {
                   rows="5"
                   value={formData.message}
                   onChange={handleChange}
+                  className={`px-4 py-3 rounded-xl border ${errors.message ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all resize-none`}
+                  placeholder={language === 'en' ? "Describe your issue or feedback..." : "अपनी समस्या या प्रतिक्रिया का वर्णन करें..."}
                   className={`px-4 py-3 rounded-xl border ${errors.message ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-nyaya-500 dark:focus:border-nyaya-500'} bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-nyaya-500/20 outline-none transition-all resize-none`}
                   placeholder={language === 'en' ? "Describe your issue or feedback..." : "à¤…à¤ªà¤¨à¥€ à¤¸à¤®à¤¸à¥à¤¯à¤¾ à¤¯à¤¾ à¤ªà¥à¤°à¤¤à¤¿à¤•à¥à¤°à¤¿à¤¯à¤¾ à¤•à¤¾ à¤µà¤°à¥à¤£à¤¨ à¤•à¤°à¥‡à¤‚..."}
                 ></textarea>
