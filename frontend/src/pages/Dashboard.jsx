@@ -1,12 +1,12 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import DashboardSkeleton from "../components/DashboardSkeleton";
 import ReactFlow, {
   MiniMap,
   Controls,
   Background
-} from 'reactflow';
-
+} from 'reactflow'; 
 import 'reactflow/dist/style.css';
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Scale, AlertTriangle, ArrowLeft, Calendar, FileText, Bot, Send, User, Users, AlertCircle, Briefcase, Search } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -176,7 +176,7 @@ const CHAT_FORM = `p-4 bg-white dark:bg-slate-900
 const CHAT_INPUT = `flex-1 bg-slate-100 dark:bg-slate-950 
   border border-slate-200 dark:border-slate-800 
   text-slate-900 dark:text-slate-100 
-  placeholder-slate-450 dark:placeholder-slate-500 
+  placeholder-slate-500 dark:placeholder-slate-400 
   focus:bg-white dark:focus:bg-slate-950 
   focus:border-nyaya-500 focus:ring-2 focus:ring-nyaya-500/20 
   rounded-full px-5 outline-none transition-all py-3 text-sm`;
@@ -433,15 +433,9 @@ const graphEdges = knowledgeGraph?.edges?.filter((edge) => {
 
 })) || [];
 
-  if (loading) {
-    return (
-      <div className={LOADING_CONTAINER}>
-        <div className={SPINNER}></div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Analyzing Document via Advanced AI...</h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">Extracting clauses and cross-referencing Indian Law</p>
-      </div>
-    );
-  }
+ if (loading) {
+  return <DashboardSkeleton />;
+}
 
   if (error) {
     return (

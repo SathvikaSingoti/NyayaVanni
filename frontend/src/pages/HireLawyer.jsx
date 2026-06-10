@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import LawyerSkeleton from "../components/LawyerSkeleton";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -26,6 +27,16 @@ import Footer from "../components/Footer";
 export default function HireLawyer() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Search and Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -359,7 +370,7 @@ export default function HireLawyer() {
                   placeholder={t("lawyers.search")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-4 pl-12 pr-20 text-slate-900 dark:text-white transition border rounded-2xl bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
+                  className="w-full py-4 pl-12 pr-20 text-slate-900 dark:text-white transition border rounded-2xl bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
                 />
               </div>
 
@@ -417,7 +428,13 @@ export default function HireLawyer() {
         </div>
 
         {/* Grid */}
-        {filteredLawyers.length === 0 ? (
+       {loading ? (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+    {Array.from({ length: 6 }).map((_, index) => (
+      <LawyerSkeleton key={index} />
+    ))}
+  </div>
+) : filteredLawyers.length === 0 ? (
           <div className="p-10 text-center border rounded-4xl border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-md">
             <Briefcase className="w-12 h-12 mx-auto mb-4 text-slate-400 dark:text-slate-500" />
             <h3 className="text-xl font-bold text-slate-850 dark:text-white">No lawyers found</h3>
@@ -640,7 +657,7 @@ export default function HireLawyer() {
                       value={caseDescription}
                       onChange={(e) => setCaseDescription(e.target.value)}
                       rows={3}
-                      className="w-full p-3 text-xs font-medium border bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-900"
+                      className="w-full p-3 text-xs font-medium border bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-900"
                     />
                   </div>
 
