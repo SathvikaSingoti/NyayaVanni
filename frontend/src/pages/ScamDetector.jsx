@@ -116,6 +116,7 @@ export default function ScamDetector() {
   const [lastAnalyzed, setLastAnalyzed] = useState(null);
   const [copied, setCopied] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [resultCopied, setResultCopied] = useState(false);
 
   const analysis = useMemo(() => { if (!lastAnalyzed) return null; return scoreText(lastAnalyzed); }, [lastAnalyzed]);
   const risk = useMemo(() => { if (!analysis) return null; return getRiskLabel(analysis.score); }, [analysis]);
@@ -130,10 +131,19 @@ export default function ScamDetector() {
     }, 1800);
   };
 
-  const onReset = () => { setText(""); setLastAnalyzed(null); setCopied(false); setAnalyzing(false); };
+  const onReset = () => { setText(""); setLastAnalyzed(null); setCopied(false); setAnalyzing(false); setResultCopied(false); };
   const onCopy = async () => {
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1200); }
     catch { /* ignore */ }
+  };
+  const onCopyResult = async () => {
+    try {
+      const flaggedReasons = analysis.hits.map(id => RULES.find(r => r.id === id)?.label).filter(Boolean).join(", ");
+      const summary = `Risk Score: ${analysis.score}/100 (${risk.label})\nFlagged: ${flaggedReasons || "None"}\n\nAnalyzed Text:\n${lastAnalyzed}`;
+      await navigator.clipboard.writeText(summary);
+      setResultCopied(true);
+      setTimeout(() => setResultCopied(false), 1200);
+    } catch { /* ignore */ }
   };
 
   return (
@@ -257,7 +267,13 @@ export default function ScamDetector() {
                 </div>
 
                 <div className="mt-6">
-                  <h4 className="text-slate-850 dark:text-white font-bold mb-3">Reasons flagged</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-slate-850 dark:text-white font-bold">Reasons flagged</h4>
+                    <button onClick={onCopyResult} className={ACTION_BUTTON}>
+                      <Copy className="w-4 h-4" />
+                      {resultCopied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
                   <div className="space-y-2">
                     {RULES.map((r) => {
                       const hit = analysis.hits.includes(r.id);
