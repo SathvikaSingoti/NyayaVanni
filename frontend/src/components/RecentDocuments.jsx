@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Clock, FileText, Trash2, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
+import { RISK_LABELS } from '../constants';
 
 const RISK_CONFIG = {
-  high:   { label: 'High Risk',   color: 'bg-red-500/20 text-red-400 border-red-500/30',    icon: AlertTriangle },
-  medium: { label: 'Medium Risk', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: AlertCircle },
-  low:    { label: 'Low Risk',    color: 'bg-green-500/20 text-green-400 border-green-500/30',  icon: CheckCircle },
-  unknown:{ label: 'Unknown',     color: 'bg-slate-500/20 text-slate-400 border-slate-500/30',  icon: FileText },
+  high:    { label: RISK_LABELS.HIGH,   color: 'bg-red-500/20 text-red-400 border-red-500/30',       icon: AlertTriangle },
+  medium:  { label: RISK_LABELS.MEDIUM, color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: AlertCircle },
+  low:     { label: RISK_LABELS.LOW,    color: 'bg-green-500/20 text-green-400 border-green-500/30',  icon: CheckCircle },
+  unknown: { label: RISK_LABELS.UNKNOWN, color: 'bg-slate-500/20 text-slate-400 border-slate-500/30', icon: FileText },
 };
 
 function RiskBadge({ level }) {
@@ -30,11 +31,24 @@ export default function RecentDocuments({ history, onClear }) {
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
 
-  if (!history || history.length === 0) return null;
+  if (!history || history.length === 0) {
+    return (
+      <div className="w-full rounded-2xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-sm overflow-hidden">
+        <div className="flex flex-col items-center justify-center px-8 py-12 text-center">
+          <svg className="w-24 h-24 mb-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="0.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="text-base font-semibold text-slate-400 mb-2">No documents yet</h3>
+          <p className="text-sm text-slate-500 max-w-xs">
+            Upload a legal document to get started with AI-powered analysis and risk assessment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full rounded-2xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-sm overflow-hidden">
-      {/* Header */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-800/50 transition-colors"
@@ -52,7 +66,6 @@ export default function RecentDocuments({ history, onClear }) {
         }
       </button>
 
-      {/* List */}
       {open && (
         <div className="divide-y divide-slate-800">
           {history.map((entry) => (
@@ -77,7 +90,6 @@ export default function RecentDocuments({ history, onClear }) {
             </button>
           ))}
 
-          {/* Clear button */}
           <div className="px-5 py-3">
             <button
               onClick={(e) => { e.stopPropagation(); onClear(); }}
