@@ -24,7 +24,6 @@ import { ARIA_LABELS, PLACEHOLDERS } from "../constants";
 import ThemeToggle from "../components/ThemeToggle";
 import Breadcrumb from "../components/Breadcrumb";
 import Footer from "../components/Footer";
-import { ARIA_LABELS, PLACEHOLDERS } from "../constants";
 
 function HighlightedText({ text, query }) {
   if (!query.trim()) return text;
