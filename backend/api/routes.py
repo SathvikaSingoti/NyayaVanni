@@ -117,7 +117,18 @@ def require_document_owner(document_id: str, session_id: str) -> dict:
 @api_router.post("/contact")
 @limiter.limit(CONTACT_RATE_LIMIT)
 async def contact_us(request: Request, body: ContactRequest):
-    """Receive contact form submissions with IP-based rate limiting."""
+    """Receive and log contact form submissions with IP-based rate limiting.
+
+    Args:
+        request: The incoming HTTP request.
+        body: The contact form payload including name, email, and subject.
+
+    Returns:
+        dict: A status ok message confirming receipt.
+
+    Raises:
+        HTTPException 429: If the rate limit is exceeded.
+    """
     logger.info(
         "Contact submission from %s: name=%s email=%s subject=%s",
         request.client.host if request.client else "unknown",
@@ -134,6 +145,18 @@ async def contact_us(request: Request, body: ContactRequest):
 @api_router.get("/session")
 @limiter.limit("10/minute")
 async def create_session(request: Request, response: Response):
+    """Create or reuse a session cookie for the current user.
+
+    Args:
+        request: The incoming HTTP request.
+        response: The outgoing HTTP response used to set the cookie.
+
+    Returns:
+        dict: A status message confirming the session is active.
+
+    Raises:
+        HTTPException 429: If the rate limit is exceeded.
+    """
     session_id = request.cookies.get("session_id")
     if not session_id or not validate_session(session_id):
         session_id = create_session_id()
@@ -498,7 +521,21 @@ def diff_analysis(
     old_document: UploadFile = File(...),
     new_document: UploadFile = File(...),
 ):
-    """Compare two document versions and return a structured difference analysis."""
+    """Compare two document versions and return a structured difference analysis.
+
+    Args:
+        request: The incoming HTTP request.
+        old_document: The original document file.
+        new_document: The updated document file.
+
+    Returns:
+        dict: Structured diff including added obligations, penalties,
+              reduced rights, hidden modifications, and recommended actions.
+
+    Raises:
+        HTTPException 401: If the session is missing or invalid.
+        HTTPException 500: If the diff analysis fails.
+    """
     try:
         session_id = require_session_id(request)
 
@@ -570,7 +607,20 @@ Provide a JSON response matching this exact schema:
 @api_router.post("/generate-document")
 @limiter.limit("10/minute")
 def generate_document(request: Request, payload: DocumentGenerationRequest):
-    """Generates a standard NDA document as a PDF based on provided details."""
+    """Generate a standard NDA document as a downloadable PDF.
+
+    Args:
+        request: The incoming HTTP request.
+        payload: The document generation payload including party names,
+                 effective date, consideration amount, and jurisdiction.
+
+    Returns:
+        StreamingResponse: A PDF file attachment of the generated NDA.
+
+    Raises:
+        HTTPException 401: If the session is missing or invalid.
+        HTTPException 500: If PDF generation fails.
+    """
     try:
         session_id = require_session_id(request)
 
@@ -631,6 +681,20 @@ def generate_document(request: Request, payload: DocumentGenerationRequest):
 
 @api_router.delete("/documents/{document_id}")
 async def delete_document(document_id: str, request: Request):
+    """Delete a document and remove it from the search index.
+
+    Args:
+        document_id: The unique identifier of the document to delete.
+        request: The incoming HTTP request.
+
+    Returns:
+        dict: A confirmation with the deleted document ID.
+
+    Raises:
+        HTTPException 401: If the session is missing or invalid.
+        HTTPException 403: If the session does not own the document.
+        HTTPException 404: If the document is not found.
+    """
     session_id = require_session_id(request)
     require_document_owner(document_id, session_id)
 
