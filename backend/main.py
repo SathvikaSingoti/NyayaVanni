@@ -86,7 +86,8 @@ app.add_middleware(
 
 
 @app.get("/")
-def read_root():
+def read_root() -> dict:
+    """Health check endpoint to verify backend status."""
     return {"message": "NyayaVanni Backend API is running."}
 
 
