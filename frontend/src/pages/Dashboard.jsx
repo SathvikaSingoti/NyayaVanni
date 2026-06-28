@@ -27,6 +27,8 @@ import { ensureSessionId } from '../utils/session';
 import ThemeToggle from '../components/ThemeToggle';
 import Breadcrumb from '../components/Breadcrumb';
 import { useDocumentHistory } from '../hooks/useDocumentHistory';
+import useKeyboardShortcut from "../hooks/useKeyboardShortcut";
+import SearchShortcutHint from "../components/SearchShortcutHint";
 
 const LOADING_CONTAINER = `min-h-screen bg-slate-50 dark:bg-slate-950 
   flex flex-col items-center justify-center transition-colors duration-300`;
@@ -250,6 +252,14 @@ export default function Dashboard() {
   const [chatLoading, setChatLoading] = useState(false);
   const [confidence, setConfidence] = useState(null);
   const messagesEndRef = useRef(null);
+  
+  // Ref for Knowledge Graph search input
+  const kgSearchInputRef = useRef(null);
+
+  // Ctrl+K / Cmd+K to focus knowledge graph search
+  useKeyboardShortcut('k', () => {
+    kgSearchInputRef.current?.focus();
+  });
 
   useEffect(() => {
     if (file) {
@@ -930,12 +940,16 @@ export default function Dashboard() {
                     and relationships
                   </p>
 
-                  <div className="mt-4">
+                  <div className="relative mt-4">
                     <input
+                      ref={kgSearchInputRef}
                       type="text"
-                      placeholder="Search nodes..."
+                      placeholder="Search nodes... (Ctrl+K)"
                       className={SEARCH_INPUT}
                     />
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                      <SearchShortcutHint />
+                    </div>
                   </div>
                 </div>
                 <div className={KG_FLOW_CONTAINER}>

@@ -26,10 +26,11 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ARIA_LABELS, PLACEHOLDERS } from '../constants';
-
 import ThemeToggle from '../components/ThemeToggle';
 import Breadcrumb from '../components/Breadcrumb';
 import Footer from '../components/Footer';
+import useKeyboardShortcut from "../hooks/useKeyboardShortcut";
+import SearchShortcutHint from "../components/SearchShortcutHint";
 
 function HighlightedText({ text, query }) {
   if (!query.trim()) return text;
@@ -79,6 +80,11 @@ export default function HireLawyer() {
   const searchInputRef = useRef(null);
   const lawyerCardRefs = useRef({});
 
+  // Ctrl+K / Cmd+K to focus search
+  useKeyboardShortcut('k', () => {
+    searchInputRef.current?.focus();
+  });
+
   // Modal / Booking State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLawyer, setSelectedLawyer] = useState(null);
@@ -109,7 +115,7 @@ export default function HireLawyer() {
         specialty: 'Real Estate & Property',
         experience: '15 Years',
         location: 'New Delhi, Delhi',
-        fee: 'â‚¹2,000/Consultation',
+        fee: '₹2,000/Consultation',
         image:
           'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256',
       },
@@ -119,7 +125,7 @@ export default function HireLawyer() {
         specialty: 'Family Law & Divorce',
         experience: '12 Years',
         location: 'Mumbai, Maharashtra',
-        fee: 'â‚¹2,500/Consultation',
+        fee: '₹2,500/Consultation',
         image:
           'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256&h=256',
       },
@@ -129,7 +135,7 @@ export default function HireLawyer() {
         specialty: 'Corporate & Business',
         experience: '20 Years',
         location: 'Bengaluru, Karnataka',
-        fee: 'â‚¹5,000/Consultation',
+        fee: '₹5,000/Consultation',
         image:
           'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=256&h=256',
       },
@@ -139,7 +145,7 @@ export default function HireLawyer() {
         specialty: 'Criminal Defense',
         experience: '8 Years',
         location: 'Pune, Maharashtra',
-        fee: 'â‚¹1,500/Consultation',
+        fee: '₹1,500/Consultation',
         image:
           'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=256&h=256',
       },
@@ -149,7 +155,7 @@ export default function HireLawyer() {
         specialty: 'Civil Litigation',
         experience: '18 Years',
         location: 'Chennai, Tamil Nadu',
-        fee: 'â‚¹3,000/Consultation',
+        fee: '₹3,000/Consultation',
         image:
           'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=256&h=256',
       },
@@ -159,7 +165,7 @@ export default function HireLawyer() {
         specialty: 'Intellectual Property',
         experience: '10 Years',
         location: 'Hyderabad, Telangana',
-        fee: 'â‚¹4,000/Consultation',
+        fee: '₹4,000/Consultation',
         image:
           'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256',
       },
@@ -584,6 +590,11 @@ export default function HireLawyer() {
                   className="w-full py-4 pl-12 pr-20 text-slate-900 dark:text-white transition border rounded-2xl bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-white/10 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-nyaya-500/70 focus:border-nyaya-500/50"
                 />
 
+                {/* Keyboard shortcut hint */}
+                <div className="absolute inset-y-0 right-14 flex items-center pointer-events-none">
+                  <SearchShortcutHint />
+                </div>
+
                 {isDropdownOpen && (
                   <div
                     id="lawyer-search-suggestions"
@@ -668,7 +679,7 @@ export default function HireLawyer() {
                 </select>
 
                 <div className="absolute inset-y-0 flex items-center pointer-events-none right-4 text-slate-400 dark:text-slate-500">
-                  â–¾
+                  ▼
                 </div>
               </div>
             </div>
