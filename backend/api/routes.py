@@ -80,6 +80,17 @@ class DocumentGenerationRequest(BaseModel):
 
 
 def require_session_id(request: Request) -> str:
+    """Extract and validate the session ID from the request cookie.
+
+    Args:
+        request: The incoming HTTP request.
+
+    Returns:
+        str: The validated session ID.
+
+    Raises:
+        HTTPException 401: If the session_id cookie is missing or invalid.
+    """
     session_id = request.cookies.get("session_id")
     if not session_id:
         raise HTTPException(status_code=401, detail="Missing session_id cookie")
@@ -89,6 +100,19 @@ def require_session_id(request: Request) -> str:
 
 
 def require_document_owner(document_id: str, session_id: str) -> dict:
+    """Verify that the session owns the requested document.
+
+    Args:
+        document_id: The unique identifier of the document.
+        session_id: The session ID from the request cookie.
+
+    Returns:
+        dict: The document record if ownership is confirmed.
+
+    Raises:
+        HTTPException 404: If the document is not found.
+        HTTPException 403: If the session does not own the document.
+    """
     record = get_document_record(document_id)
     if not record:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -100,7 +124,18 @@ def require_document_owner(document_id: str, session_id: str) -> dict:
 @api_router.post("/contact")
 @limiter.limit(CONTACT_RATE_LIMIT)
 async def contact_us(request: Request, body: ContactRequest):
-    """Receive contact form submissions with IP-based rate limiting."""
+    """Receive and log contact form submissions with IP-based rate limiting.
+
+    Args:
+        request: The incoming HTTP request.
+        body: The contact form payload including name, email, and subject.
+
+    Returns:
+        dict: A status ok message confirming receipt.
+
+    Raises:
+        HTTPException 429: If the rate limit is exceeded.
+    """
     logger.info(
         "Contact submission from %s: name=%s email=%s subject=%s",
         request.client.host if request.client else "unknown",
@@ -117,6 +152,18 @@ async def contact_us(request: Request, body: ContactRequest):
 @api_router.get("/session")
 @limiter.limit("10/minute")
 async def create_session(request: Request, response: Response):
+    """Create or reuse a session cookie for the current user.
+
+    Args:
+        request: The incoming HTTP request.
+        response: The outgoing HTTP response used to set the cookie.
+
+    Returns:
+        dict: A status message confirming the session is active.
+
+    Raises:
+        HTTPException 429: If the rate limit is exceeded.
+    """
     session_id = request.cookies.get("session_id")
     if not session_id or not validate_session(session_id):
         session_id = create_session_id()
@@ -391,10 +438,20 @@ def analyze_document(
 def chat_stream_sse(
     request: Request, user_message: str, language: str = "en", document_id: str = None
 ):
-    """
-    SSE endpoint for real-time token-by-token streaming.
-    Returns text/event-stream for EventSource-compatible clients.
-    Usage: GET /chat/stream?user_message=hello&language=en
+    """Stream chat responses as Server-Sent Events (SSE).
+
+    Args:
+        request: The incoming HTTP request.
+        user_message: The user's chat message (query parameter).
+        language: The target language for the response (default "en").
+        document_id: Optional document ID to load analysis context.
+
+    Returns:
+        StreamingResponse: A text/event-stream response with token-by-token chunks.
+
+    Raises:
+        HTTPException 400: If the user message is empty.
+        HTTPException 429: If the rate limit is exceeded.
     """
     import json as _json
 
@@ -524,7 +581,21 @@ def diff_analysis(
     old_document: UploadFile = File(...),
     new_document: UploadFile = File(...),
 ):
-    """Compare two document versions and return a structured difference analysis."""
+    """Compare two document versions and return a structured difference analysis.
+
+    Args:
+        request: The incoming HTTP request.
+        old_document: The original document file.
+        new_document: The updated document file.
+
+    Returns:
+        dict: Structured diff including added obligations, penalties,
+              reduced rights, hidden modifications, and recommended actions.
+
+    Raises:
+        HTTPException 401: If the session is missing or invalid.
+        HTTPException 500: If the diff analysis fails.
+    """
     try:
         session_id = require_session_id(request)
 
@@ -600,7 +671,20 @@ Provide a JSON response matching this exact schema:
 @api_router.post("/generate-document")
 @limiter.limit("10/minute")
 def generate_document(request: Request, payload: DocumentGenerationRequest):
-    """Generates a standard NDA document as a PDF based on provided details."""
+    """Generate a standard NDA document as a downloadable PDF.
+
+    Args:
+        request: The incoming HTTP request.
+        payload: The document generation payload including party names,
+                 effective date, consideration amount, and jurisdiction.
+
+    Returns:
+        StreamingResponse: A PDF file attachment of the generated NDA.
+
+    Raises:
+        HTTPException 401: If the session is missing or invalid.
+        HTTPException 500: If PDF generation fails.
+    """
     try:
         session_id = require_session_id(request)
 
@@ -662,6 +746,20 @@ def generate_document(request: Request, payload: DocumentGenerationRequest):
 @api_router.delete("/documents/{document_id}")
 @limiter.limit(DELETE_RATE_LIMIT)
 async def delete_document(document_id: str, request: Request):
+    """Delete a document and remove it from the search index.
+
+    Args:
+        document_id: The unique identifier of the document to delete.
+        request: The incoming HTTP request.
+
+    Returns:
+        dict: A confirmation with the deleted document ID.
+
+    Raises:
+        HTTPException 401: If the session is missing or invalid.
+        HTTPException 403: If the session does not own the document.
+        HTTPException 404: If the document is not found.
+    """
     session_id = require_session_id(request)
     require_document_owner(document_id, session_id)
 
@@ -725,3 +823,4 @@ def search_documents_endpoint(
     except Exception as e:
         logger.error(f"Search failed: {e}")
         raise HTTPException(status_code=500, detail="Search operation failed")
+
