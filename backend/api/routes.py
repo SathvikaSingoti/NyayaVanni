@@ -4,9 +4,14 @@ import logging
 import os
 import uuid
 
+
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Request, Response
+import asyncio
+
 import google.generativeai as genai
 from fastapi import (APIRouter, Depends, File, HTTPException, Request,
                      Response, UploadFile)
+
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from reportlab.lib.pagesizes import letter
@@ -152,7 +157,15 @@ async def upload_document(request: Request, file: UploadFile = File(...)):
             raise HTTPException(
                 status_code=400, detail="Uploaded file must have a valid filename."
             )
-        ext = filename.split(".")[-1].lower() if "." in filename else ""
+
+        # Only allow safe filenames to be stored; do not trust user-controlled paths/characters.
+        safe_filename = os.path.basename(filename)
+        safe_filename = "".join(ch for ch in safe_filename if ch.isalnum() or ch in ("._-"))
+        if not safe_filename:
+            safe_filename = "upload"
+
+        ext = safe_filename.split('.')[-1].lower() if '.' in safe_filename else ''
+
         if ext not in ALLOWED_EXTENSIONS:
             raise HTTPException(
                 status_code=400,
@@ -206,13 +219,32 @@ async def upload_document(request: Request, file: UploadFile = File(...)):
 
 @api_router.post("/analyze/{document_id}")
 @limiter.limit(RATE_LIMIT_ANALYZE)
+
+async def analyze_document(request: Request, document_id: str, language: str = "en", force_ocr: bool = False, file: UploadFile = File(None)):
+    """Trigger full analysis pipeline."""
+
+    # Heavy OCR/LLM/DB work is executed in a worker thread to avoid blocking the event loop.
+    return await asyncio.to_thread(
+        _analyze_document_sync,
+        request,
+        document_id,
+        language,
+        force_ocr,
+        file,
+    )
+
+
+def _analyze_document_sync(
+
 def analyze_document(
+
     request: Request,
     document_id: str,
     language: str = "en",
     force_ocr: bool = False,
     file: UploadFile = File(None),
 ):
+
     """Trigger the full document analysis pipeline.
 
     Args:
@@ -229,6 +261,7 @@ def analyze_document(
         HTTPException 404: If the document is not found.
         HTTPException 500: If analysis fails.
     """
+
     try:
         session_id = require_session_id(request)
         record = require_document_owner(document_id, session_id)
@@ -260,6 +293,9 @@ def analyze_document(
                     status_code=500, detail="Failed to read document from storage"
                 )
             filename = record["filename"]
+            ext_from_record = str(filename).lower().split('.')[-1] if '.' in str(filename) else ''
+            if ext_from_record not in ALLOWED_EXTENSIONS:
+                raise HTTPException(status_code=400, detail="Stored document has unsupported file type")
         else:
             contents = file.file.read()
             filename = file.filename
